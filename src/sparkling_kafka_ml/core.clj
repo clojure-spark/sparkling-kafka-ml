@@ -16,3 +16,18 @@
            (java.util Map)
            (java.util Set))
   (:gen-class))
+
+(defn -main
+  [& args]
+  (let [c (-> (conf/spark-conf)
+              (conf/master "local[*]")
+              (conf/app-name "Consumer"))
+        context (JavaSparkContext. c)
+        streaming-context (JavaStreamingContext. context (Duration. 1000))
+        parameters (HashMap. {"metadata.broker.list" "127.0.0.1:9092"})
+        topics (Collections/singleton "w4u_messages")
+        stream (KafkaUtils/createDirectStream streaming-context String String StringDecoder StringDecoder parameters topics)]
+    (do
+      (.print stream)
+      (.start streaming-context)
+      (.awaitTermination streaming-context))))
